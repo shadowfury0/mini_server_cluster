@@ -1,5 +1,0 @@
-/opt/network/build/CMakeFiles/main.dir
-/opt/network/build/CMakeFiles/test.dir
-/opt/network/build/CMakeFiles/test2.dir
-/opt/network/build/CMakeFiles/edit_cache.dir
-/opt/network/build/CMakeFiles/rebuild_cache.dir
