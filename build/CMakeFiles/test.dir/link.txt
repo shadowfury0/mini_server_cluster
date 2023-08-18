@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -rdynamic CMakeFiles/test.dir/src/net_buffer.cpp.o CMakeFiles/test.dir/src/net_epoll.cpp.o CMakeFiles/test.dir/src/net_server.cpp.o CMakeFiles/test.dir/src/net_server_cluster.cpp.o CMakeFiles/test.dir/src/net_sock.cpp.o CMakeFiles/test.dir/src/threadPool.cpp.o CMakeFiles/test.dir/test/test.cpp.o -o /opt/network/bin/test  -lpthread 
