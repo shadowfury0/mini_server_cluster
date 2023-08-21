@@ -1,6 +1,78 @@
 #include "net_server.h"
 
 #include <string.h>
+<<<<<<< HEAD
+#include <dirent.h>
+
+//先暂时这样格式化条件太多
+//格式化字符串
+inline void strformat(char* tmp,const char* name,int reverse){
+    strcat(tmp,"|");
+    //效率很低到时候进行更改
+    for(int i = 0;i< ( reverse - 1 )* 2 ;i++){
+        strcat(tmp," ");
+    }
+    //一级目录不打印
+    if (reverse != 1){
+        strcat(tmp,"|");
+    }
+    strcat(tmp,"_");
+    strcat(tmp,"_");
+    strcat(tmp,name);
+    strcat(tmp,"\n");
+}
+
+void Net_Server::lscmd(const char* path,int recur,int reverse = 1){
+    
+    int ret;
+
+    ret = access(path,F_OK);
+    if (ret < 0){
+        std::cout << " dir not exit" << std::endl;
+        return;
+    }
+    
+    struct dirent *fd;
+    DIR *dir = opendir(path);
+
+    if (NULL == dir){
+        perror("Error opening dir\n");
+        return;
+    }
+    
+    while ((fd = readdir(dir)) != NULL) {
+        if (0 == recur){
+            return;
+        }
+        // 忽略当前目录和父目录
+        if (strcmp(fd->d_name, ".") == 0 || strcmp(fd->d_name, "..") == 0) {
+            continue;
+        }
+        
+        char tmp[c_char_len];
+        memset(tmp,'\0',sizeof(tmp));
+        if (fd->d_type == DT_DIR){
+            //想想办法变小一点
+            char fname[c_char_len];  //获取文件名
+
+            // printf("%d : dir -- > %s\n", recur,fd->d_name);
+            sprintf(fname,"%s/%s",path,fd->d_name);
+
+            strformat(tmp,fd->d_name,reverse);
+
+            write_buf.push(tmp);
+
+            lscmd(fname,recur - 1,reverse + 1);
+        }else{ 
+            strformat(tmp,fd->d_name,reverse);
+
+            write_buf.push(tmp);
+        }
+    }
+    closedir(dir);//关闭
+}
+=======
+>>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
 //暂时放这里测试
 void Net_Server::receive(char* buf,int sockfd){
     try{
@@ -43,11 +115,32 @@ void Net_Server::receive(char* buf,int sockfd){
         delete buf;
     }
 }
+<<<<<<< HEAD
+void Net_Server::preHead(int sockfd){
+    write_buf.push("mini_ftp >");
+    post(sockfd);
+}
+=======
 
+>>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
 void Net_Server::parsecmd(int sockfd){
     char* line_t = read_buf.pop();
 
     //一定要加\n因为发送数据都是回车
+<<<<<<< HEAD
+    if (!strcmp(line_t,"hello\n")){
+        write_buf.push("hello my friend \n");
+    }else if (!strncmp(line_t,"ls",2) || !strncmp(line_t,"dir",3)){
+        write_buf.push(curDir);
+        write_buf.push("\n");
+        //查看当前文件目录
+        lscmd(curDir,3);
+    }
+    
+    post(sockfd);
+    preHead(sockfd);
+        
+=======
     if (!strcmp(line_t,"quit\n")){
         write_buf.push("server quit\n");
         post(sockfd);
@@ -62,6 +155,7 @@ void Net_Server::parsecmd(int sockfd){
     if (line_t != NULL){
         free(line_t);
     }
+>>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
 }
 
 void Net_Server::post(int sockfd){
@@ -70,9 +164,12 @@ void Net_Server::post(int sockfd){
     {
         t_ch = write_buf.pop();
         send(sockfd,t_ch,strlen(t_ch),0);
+<<<<<<< HEAD
+=======
         if (t_ch != NULL){
             free(t_ch);//释放内存
         }
+>>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
     }
 }
 
@@ -90,6 +187,11 @@ void Net_Server::et(epoll_event* events,int number,int listenfd){//ET模式
             
             std::cout << " listening address : " <<  inet_ntoa(client_address.sin_addr)
                 << "-----> port : " << ntohs(client_address.sin_port) << std::endl;
+<<<<<<< HEAD
+
+            preHead(connfd);
+=======
+>>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
         }
         else if(events->events & EPOLLIN){//客户端有数据发送到服务端
             std::cout<<"et trigger once"<<std::endl;
@@ -109,6 +211,13 @@ void Net_Server::init(const char* ip,int p){
     ipaddr = ip;
     port = p;
 
+<<<<<<< HEAD
+    c_char_len = 256; // 32字节
+    //当前文件夹路径
+    curDir = "/opt/betternet/";
+
+=======
+>>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
     int i ;
     sock = new Socket();
     sock->init(ipaddr,port);
