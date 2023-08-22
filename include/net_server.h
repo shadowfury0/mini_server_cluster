@@ -21,6 +21,9 @@ public:
         if (ep != NULL ){
             delete ep;
         }
+        if (curDir != NULL){
+            delete curDir;
+        }
     }
 
     void run();
@@ -34,27 +37,24 @@ private:
     void post(int sockfd);
 
     void parsecmd(int sockfd);
-<<<<<<< HEAD
     //访问头
     void preHead(int sockfd);
 
     //如果输入负一则全部递归
-    void lscmd(const char* path,int recur,int reverse);
-=======
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
+    void lscmd(const char* path,int recur,int prin,int sockfd);
+    void cdcmd(char* path);
 
     void et(epoll_event* events,int number,int listenfd);
 private:
     const char* ipaddr;
+    char* curDir;
+
     int port;
     bool running = true;
-<<<<<<< HEAD
+
     size_t c_char_len;//字符数组长度
 
-    const char* curDir;
-=======
-
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
+    Lock<> s_lock;
     // ThreadPool<>* pl;//线程池
     ThreadPool netpool;
 

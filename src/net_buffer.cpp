@@ -8,22 +8,24 @@ int NetBuffer::getSize(){
 
 void NetBuffer::push(const char* data){
     size_t len = strlen(data);
-    char* tmp = NULL; 
-    tmp = (char*)malloc(sizeof(char) * len);
+    char* tmp = NULL; //需要回收内存
+    //内存及其不安全给他多预留一个空间,给'\0'使用，防止内存访问错误
+    tmp = new char[len + 1];
     strcpy(tmp,data);
     
     lock.lock();
     buf.push_back(tmp);
     lock.unlock();
-}
 
-//记得回收内存
+}
+//需要回收指针指向内存
 char* NetBuffer::pop(){
+    char* tmp;
+    tmp = buf.front();
     lock.lock();
-    char* tmp = buf.front();
     buf.pop_front();
     lock.unlock();
-    return tmp;
+    return tmp; 
 }
 
 bool NetBuffer::isEmpty(){

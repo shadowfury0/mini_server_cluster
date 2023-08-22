@@ -1,7 +1,6 @@
 #include "net_server.h"
 
 #include <string.h>
-<<<<<<< HEAD
 #include <dirent.h>
 
 //先暂时这样格式化条件太多
@@ -16,14 +15,12 @@ inline void strformat(char* tmp,const char* name,int reverse){
     if (reverse != 1){
         strcat(tmp,"|");
     }
-    strcat(tmp,"_");
-    strcat(tmp,"_");
+    strcat(tmp,"__");
     strcat(tmp,name);
     strcat(tmp,"\n");
 }
 
-void Net_Server::lscmd(const char* path,int recur,int reverse = 1){
-    
+void Net_Server::lscmd(const char* path,int recur,int prin,int sockfd){
     int ret;
 
     ret = access(path,F_OK);
@@ -56,23 +53,38 @@ void Net_Server::lscmd(const char* path,int recur,int reverse = 1){
             char fname[c_char_len];  //获取文件名
 
             // printf("%d : dir -- > %s\n", recur,fd->d_name);
-            sprintf(fname,"%s/%s",path,fd->d_name);
+            sprintf(fname,"%s/%s",path,fd->d_name)//strange
 
-            strformat(tmp,fd->d_name,reverse);
+            strformat(tmp,fd->d_name,prin);
 
             write_buf.push(tmp);
-
-            lscmd(fname,recur - 1,reverse + 1);
+            std::cout <<"get in : " << fname << std::endl;
+            lscmd(fname,recur - 1,prin + 1,sockfd);
         }else{ 
-            strformat(tmp,fd->d_name,reverse);
+            strformat(tmp,fd->d_name,prin);
 
             write_buf.push(tmp);
         }
     }
+    
     closedir(dir);//关闭
 }
-=======
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
+//太复杂了
+void Net_Server::cdcmd(char* path){
+    //截取字符串
+    char* token = strtok(path, " ");
+    token = strtok(NULL," ");//取第二个目录值
+
+    //这个应该要加锁
+    // s_lock.lock();
+    memset(curDir,'\0',strlen(curDir));
+    strncpy(curDir,token,strlen(token) - 1);
+
+    write_buf.push(curDir);
+    write_buf.push("\n");
+
+    // s_lock.unlock();//这里解锁目的是防止死锁
+}
 //暂时放这里测试
 void Net_Server::receive(char* buf,int sockfd){
     try{
@@ -115,47 +127,40 @@ void Net_Server::receive(char* buf,int sockfd){
         delete buf;
     }
 }
-<<<<<<< HEAD
 void Net_Server::preHead(int sockfd){
     write_buf.push("mini_ftp >");
     post(sockfd);
 }
-=======
-
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
 void Net_Server::parsecmd(int sockfd){
     char* line_t = read_buf.pop();
 
     //一定要加\n因为发送数据都是回车
-<<<<<<< HEAD
     if (!strcmp(line_t,"hello\n")){
         write_buf.push("hello my friend \n");
-    }else if (!strncmp(line_t,"ls",2) || !strncmp(line_t,"dir",3)){
+    }
+    else if(!strcmp(line_t,"pwd\n")){
+        // std::cout << curDir << std::endl;
+        write_buf.push(curDir);
+        write_buf.push("\n");
+    }
+    else if(!strncmp(line_t,"cd",2)){
+        cdcmd(line_t);
+    }
+    else if (!strcmp(line_t,"ls\n") || !strcmp(line_t,"dir\n")){
         write_buf.push(curDir);
         write_buf.push("\n");
         //查看当前文件目录
-        lscmd(curDir,3);
+        lscmd(curDir,3,1,sockfd);
     }
     
     post(sockfd);
     preHead(sockfd);
-        
-=======
-    if (!strcmp(line_t,"quit\n")){
-        write_buf.push("server quit\n");
-        post(sockfd);
-        //断开对方连接
-        shutdown(sockfd,SHUT_RDWR);
-        
-    }else if (!strcmp(line_t,"hello\n")){
-        write_buf.push("hello my friend \n");
-        post(sockfd);
-    }
-
+    
+    //删除
     if (line_t != NULL){
         free(line_t);
+        line_t = NULL;
     }
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
 }
 
 void Net_Server::post(int sockfd){
@@ -164,12 +169,11 @@ void Net_Server::post(int sockfd){
     {
         t_ch = write_buf.pop();
         send(sockfd,t_ch,strlen(t_ch),0);
-<<<<<<< HEAD
-=======
+
         if (t_ch != NULL){
-            free(t_ch);//释放内存
+            free(t_ch);
+            t_ch = NULL;
         }
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
     }
 }
 
@@ -187,18 +191,13 @@ void Net_Server::et(epoll_event* events,int number,int listenfd){//ET模式
             
             std::cout << " listening address : " <<  inet_ntoa(client_address.sin_addr)
                 << "-----> port : " << ntohs(client_address.sin_port) << std::endl;
-<<<<<<< HEAD
 
             preHead(connfd);
-=======
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
         }
         else if(events->events & EPOLLIN){//客户端有数据发送到服务端
             std::cout<<"et trigger once"<<std::endl;
-            // receive(buf,sockfd);
             char* buf = NULL; 
             buf = new char[ep->buffer_size];                
-            // receive(buf,sockfd);
             netpool.enqueue(&Net_Server::receive,this,buf,sockfd);
         }
         else {
@@ -211,17 +210,22 @@ void Net_Server::init(const char* ip,int p){
     ipaddr = ip;
     port = p;
 
-<<<<<<< HEAD
     c_char_len = 256; // 32字节
     //当前文件夹路径
-    curDir = "/opt/betternet/";
+    //这里是栈变量要更改
+    curDir = NULL;
+    curDir = (char*)malloc(sizeof(char) * c_char_len);
+    strcpy(curDir,"/opt/network");
 
-=======
->>>>>>> 93f3e47402ba8dbf22ae04a8b39a4e4121694267
+    //加锁
+    s_lock.getLock();
+
     int i ;
+    sock = NULL;
     sock = new Socket();
     sock->init(ipaddr,port);
 
+    ep = NULL;
     ep = new EpollMode();
     ep->init();
 
