@@ -10,7 +10,6 @@ void Socket::init(const char* ip,int port,int max,bool istcp){
     address.sin_port=htons(port);
 
     
-    
     if ( istcp ){
         if (-1 == (listenfd=socket(PF_INET,SOCK_STREAM,0)) )
         {

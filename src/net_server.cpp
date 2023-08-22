@@ -19,13 +19,36 @@ inline void strformat(char* tmp,const char* name,int reverse){
     strcat(tmp,name);
     strcat(tmp,"\n");
 }
+//暂定这种读文件方式，以后一更高效的读取文件的方式再进行替换
+void Net_Server::downloadFile(const char* path){
+    FILE* fp;
+    char line[c_char_len];//到时候修改
+     // 逐行读取文本文件
+    fp = fopen(path, "r");
+    if (fp == NULL) {
+        write_buf.push("file open error\n");
+        return ;
+    }
 
-void Net_Server::lscmd(const char* path,int recur,int prin,int sockfd){
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        write_buf.push(line);
+    }
+
+    // 关闭文件
+    if (fclose(fp) != 0) {
+        write_buf.push("file close error\n");
+        return ;
+    }
+
+}
+
+void Net_Server::lscmd(const char* path,int recur,int prin){
     int ret;
 
     ret = access(path,F_OK);
     if (ret < 0){
         std::cout << " dir not exit" << std::endl;
+        write_buf.push(" dir not exit  \n");
         return;
     }
     
@@ -34,6 +57,7 @@ void Net_Server::lscmd(const char* path,int recur,int prin,int sockfd){
 
     if (NULL == dir){
         perror("Error opening dir\n");
+        write_buf.push(" Error opening  dir \n ");
         return;
     }
     
@@ -53,37 +77,59 @@ void Net_Server::lscmd(const char* path,int recur,int prin,int sockfd){
             char fname[c_char_len];  //获取文件名
 
             // printf("%d : dir -- > %s\n", recur,fd->d_name);
-            sprintf(fname,"%s/%s",path,fd->d_name)//strange
+            sprintf(fname,"%s/%s",path,fd->d_name);//strange
 
             strformat(tmp,fd->d_name,prin);
 
             write_buf.push(tmp);
-            std::cout <<"get in : " << fname << std::endl;
-            lscmd(fname,recur - 1,prin + 1,sockfd);
+            lscmd(fname,recur - 1,prin + 1);
         }else{ 
             strformat(tmp,fd->d_name,prin);
 
             write_buf.push(tmp);
         }
     }
-    
     closedir(dir);//关闭
 }
-//太复杂了
+
 void Net_Server::cdcmd(char* path){
     //截取字符串
     char* token = strtok(path, " ");
     token = strtok(NULL," ");//取第二个目录值
 
+    if (strtok(NULL," ")){
+        //判断有无第三个参数
+        std::cout << "error args larger than 2 " << std::endl;
+        write_buf.push("error args larger than 2\n");
+        return;
+    }
     //这个应该要加锁
-    // s_lock.lock();
+    s_lock.lock();
     memset(curDir,'\0',strlen(curDir));
     strncpy(curDir,token,strlen(token) - 1);
+    s_lock.unlock();//这里解锁目的是防止死锁
 
     write_buf.push(curDir);
     write_buf.push("\n");
 
-    // s_lock.unlock();//这里解锁目的是防止死锁
+}
+
+void Net_Server::getcmd(char* path){
+    //截取字符串
+    char* token = strtok(path, " ");
+    token = strtok(NULL," ");//取第二个目录值
+
+    if (strtok(NULL," ")){
+        //判断有无第三个参数
+        std::cout << "error args larger than 2 " << std::endl;
+        write_buf.push("error args larger than 2\n");
+        return;
+    }
+
+    char tmp[c_char_len];
+    strncpy(tmp,token,strlen(token) - 1);
+    //下载文件并发送
+    downloadFile(tmp);
 }
 //暂时放这里测试
 void Net_Server::receive(char* buf,int sockfd){
@@ -91,7 +137,7 @@ void Net_Server::receive(char* buf,int sockfd){
         printf("thread  id : %u\n",pthread_self());
         while(1){//这里要一次性读完客户端发送来的数据因为ET是不会重复触发
             memset(buf,'\0',ep->buffer_size);
-            int ret=recv(sockfd,buf,ep->buffer_size + 4,0);
+            int ret=recv(sockfd,buf,ep->buffer_size - 1,0);
             if(ret<0){//非阻塞IO中recv返回-1并不一定是出错
                 if((errno==EAGAIN)||(errno==EWOULDBLOCK)){//errno为EAGAIN和EWOULDBLOCK时表示数据已经读取完毕可以进行下一次epoll
                     std::cout<<"epoll again"<<std::endl;
@@ -100,17 +146,15 @@ void Net_Server::receive(char* buf,int sockfd){
                 close(sockfd);
                 break;
             }
-            else if(ret==0){//连接已关闭
+            else if(0 == ret){//连接已关闭
                 std::cout << "one connection close " << std::endl;
                 close(sockfd);
             }
             else{
                 std::cout<<"receive data:"<<ret<<" "<<buf<<std::endl;//输出接收到的数据
                 //解析发来的数据
-
                 read_buf.push(buf);
                 parsecmd(sockfd);
-                // write_buf.push(buf);
                 //建议直接发送会好一点
                 // send(sockfd,buf,ret,0);
             }
@@ -139,7 +183,6 @@ void Net_Server::parsecmd(int sockfd){
         write_buf.push("hello my friend \n");
     }
     else if(!strcmp(line_t,"pwd\n")){
-        // std::cout << curDir << std::endl;
         write_buf.push(curDir);
         write_buf.push("\n");
     }
@@ -150,7 +193,14 @@ void Net_Server::parsecmd(int sockfd){
         write_buf.push(curDir);
         write_buf.push("\n");
         //查看当前文件目录
-        lscmd(curDir,3,1,sockfd);
+        lscmd(curDir,3,1);
+    }
+    else if(!strncmp(line_t,"get",3)){
+        getcmd(line_t);
+        write_buf.push("\n");
+    }
+    else{
+        write_buf.push("nothing\n");
     }
     
     post(sockfd);
@@ -177,7 +227,7 @@ void Net_Server::post(int sockfd){
     }
 }
 
-void Net_Server::et(epoll_event* events,int number,int listenfd){//ET模式
+void Net_Server::netmode(epoll_event* events,int number,int listenfd,bool iset){//ET模式
     
     for(int i=0;i<number;i++){//就绪事件
         int sockfd=events->data.fd;
@@ -187,7 +237,7 @@ void Net_Server::et(epoll_event* events,int number,int listenfd){//ET模式
             struct sockaddr_in client_address;
             socklen_t client_addrlength=sizeof(client_address);
             int connfd=accept(listenfd,(struct sockaddr*)&client_address,&client_addrlength);
-            ep->addfd(connfd,true);//新连接设置为ET模式
+            ep->addfd(connfd,iset);//新连接设置为ET模式
             
             std::cout << " listening address : " <<  inet_ntoa(client_address.sin_addr)
                 << "-----> port : " << ntohs(client_address.sin_port) << std::endl;
@@ -195,7 +245,7 @@ void Net_Server::et(epoll_event* events,int number,int listenfd){//ET模式
             preHead(connfd);
         }
         else if(events->events & EPOLLIN){//客户端有数据发送到服务端
-            std::cout<<"et trigger once"<<std::endl;
+            std::cout<<" trigger once"<<std::endl;
             char* buf = NULL; 
             buf = new char[ep->buffer_size];                
             netpool.enqueue(&Net_Server::receive,this,buf,sockfd);
@@ -243,8 +293,8 @@ void Net_Server::runChild(){
             std::cout << "error  epoll wait"<< std::endl;
             break;
         }
-        // lt(events,ret,epollfd,listenfd);//采用LT模式
-        et(ep->events,ret,sock->listenfd);//采用ET模式
+        //采用LT模式 改为false
+        netmode(ep->events,ret,sock->listenfd,true);//采用ET模式
     }
 }
 

@@ -6,6 +6,7 @@ void EpollMode::addfd(int fd,bool enable_et){
     event.events=EPOLLIN;//可读事件
     if(enable_et){//支持ET模式
         event.events|=EPOLLET;
+        // event.events|=EPOLLONESHOT;//只被一个线程使用文件描述符
     }
     //添加事件
     if ( epoll_ctl(epollfd,EPOLL_CTL_ADD,fd,&event) <  0 ) {

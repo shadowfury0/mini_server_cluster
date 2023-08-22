@@ -39,12 +39,14 @@ private:
     void parsecmd(int sockfd);
     //访问头
     void preHead(int sockfd);
-
+    //下载文件
+    void downloadFile(const char* path);
     //如果输入负一则全部递归
-    void lscmd(const char* path,int recur,int prin,int sockfd);
+    void lscmd(const char* path,int recur,int prin);
     void cdcmd(char* path);
+    void getcmd(char* path);
 
-    void et(epoll_event* events,int number,int listenfd);
+    void netmode(epoll_event* events,int number,int listenfd,bool iset);
 private:
     const char* ipaddr;
     char* curDir;

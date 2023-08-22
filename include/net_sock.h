@@ -10,7 +10,7 @@ public:
     Socket(){
         listenfd = -1;
     }
-    virtual ~Socket(){
+    ~Socket(){
         if (listenfd >= 0){
             close(listenfd);
         }
