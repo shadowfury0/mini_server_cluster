@@ -12,7 +12,9 @@ class Net_Server{
 public:
     Net_Server() :
     ep(NULL),
-    sock(NULL){
+    sock(NULL),
+    curDir(NULL)
+    {
     }
     ~Net_Server(){ 
         if (sock != NULL )  {

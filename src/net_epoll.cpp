@@ -3,7 +3,7 @@
 void EpollMode::addfd(int fd,bool enable_et){
     epoll_event event;
     event.data.fd=fd;
-    event.events=EPOLLIN;//可读事件
+    event.events=EPOLLIN|EPOLLOUT;//可读事件
     if(enable_et){//支持ET模式
         event.events|=EPOLLET;
         // event.events|=EPOLLONESHOT;//只被一个线程使用文件描述符

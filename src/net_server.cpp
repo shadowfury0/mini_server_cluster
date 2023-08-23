@@ -233,7 +233,7 @@ void Net_Server::netmode(epoll_event* events,int number,int listenfd,bool iset){
         int sockfd=events->data.fd;
         //触发测试
         // ep->event_trigger(events);
-        if(sockfd==listenfd){//监听端口有新连接
+        if(sockfd == listenfd){//监听端口有新连接
             struct sockaddr_in client_address;
             socklen_t client_addrlength=sizeof(client_address);
             int connfd=accept(listenfd,(struct sockaddr*)&client_address,&client_addrlength);
@@ -255,7 +255,11 @@ void Net_Server::netmode(epoll_event* events,int number,int listenfd,bool iset){
         }
     }
 }
-
+inline void handle_pipe(int sig)
+{
+//do nothing
+    // std::cout << "one connection close " << std::endl;
+}
 void Net_Server::init(const char* ip,int p){
     ipaddr = ip;
     port = p;
@@ -271,17 +275,22 @@ void Net_Server::init(const char* ip,int p){
     s_lock.getLock();
 
     int i ;
-    sock = NULL;
     sock = new Socket();
     sock->init(ipaddr,port);
 
-    ep = NULL;
     ep = new EpollMode();
     ep->init();
 
     ep->addfd(sock->listenfd,true);
 
-    netpool.init(3);
+    netpool.init(1);
+
+    //处理信号事件暂时搁置在这里
+    struct sigaction sa;
+    sa.sa_handler = handle_pipe;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGPIPE,&sa,NULL);
 }
 void Net_Server::runChild(){
     //跑监听事件

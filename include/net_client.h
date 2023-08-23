@@ -6,18 +6,22 @@
 
 class Net_Client{
 public:
-    Net_Client(){
+    Net_Client()
+    {
         connfd = -1;
         running = true;
     }
     ~Net_Client(){
-        
     }
-    void init(const char* ip,int port,int max = 5);
+    void init(const char* ip,int port);
     void run();
+    
 private:
+    char ip[32];
+    int port;
     int connfd;
     bool running;
+
 };
 
 #endif
