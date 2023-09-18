@@ -39,10 +39,11 @@ private:
     void post(int sockfd);
 
     void parsecmd(int sockfd);
-    //访问头
-    void preHead(int sockfd);
+
     //下载文件
-    void downloadFile(const char* path);
+    void readFile(const char* path);
+
+    void strformat(char* tmp,const char* name,int reverse);
     //如果输入负一则全部递归
     void lscmd(const char* path,int recur,int prin);
     void cdcmd(char* path);
@@ -55,8 +56,6 @@ private:
 
     int port;
     bool running = true;
-
-    size_t c_char_len;//字符数组长度
 
     Lock<> s_lock;
     // ThreadPool<>* pl;//线程池

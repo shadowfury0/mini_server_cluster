@@ -10,28 +10,28 @@ public:
         if(pthread_mutex_init(&mid,NULL) != 0){
             throw std::exception();
         }
-        std::cout << " pthread_mutex_init  ------------- " << std::endl;
+        // std::cout << " pthread_mutex_init  ------------- " << std::endl;
     }
     ~Mutex(){
         if(pthread_mutex_destroy(&mid) != 0){
             throw std::exception();
         }
-        std::cout << " pthread_mutex_destroy --------------" << std::endl;
+        // std::cout << " pthread_mutex_destroy --------------" << std::endl;
     }
     void lock(){
         pthread_mutex_lock(&mid);
-        std::cout << " mutex_lock --------------" << std::endl;
+        // std::cout << " mutex_lock --------------" << std::endl;
     }
     void unlock(){
         pthread_mutex_unlock(&mid);
-        std::cout << " mutex_unlock --------------" << std::endl;
+        // std::cout << " mutex_unlock --------------" << std::endl;
     }
     void trylock(){
         if (pthread_mutex_trylock(&mid) != 0){
-            std::cout << " trylock failed ----->  " << std::endl;
+            // std::cout << " trylock failed ----->  " << std::endl;
             return;
         }
-        std::cout << " trylock  success ----->  " << std::endl;
+        // std::cout << " trylock  success ----->  " << std::endl;
     }
     pthread_mutex_t getId()
     {
@@ -49,29 +49,29 @@ public:
         if (pthread_spin_init(&mid,NULL) != 0){
             throw std::exception();
         }
-        std::cout << " pthread_mutex_init  ------------- " << std::endl;
+        // std::cout << " pthread_mutex_init  ------------- " << std::endl;
     }
     virtual ~SpinLock(){
         if (pthread_spin_destroy(&mid) != 0){
             throw std::exception();
         }
-        std::cout << " pthread_spin_destroy  ------------- " << std::endl;
+        // std::cout << " pthread_spin_destroy  ------------- " << std::endl;
     }
 
     void lock(){
         pthread_spin_lock(&mid);
-        std::cout << " pthread_spin_lock  ------------- " << std::endl;
+        // std::cout << " pthread_spin_lock  ------------- " << std::endl;
     }
     void unlock(){
         pthread_spin_unlock(&mid);
-        std::cout << " pthread_spin_unlock  ------------- " << std::endl;
+        // std::cout << " pthread_spin_unlock  ------------- " << std::endl;
     }
     void trylock(){
         if (pthread_spin_trylock(&mid) != 0){
-            std::cout << " trylock failed ----->  " << std::endl;
+            // std::cout << " trylock failed ----->  " << std::endl;
             return;
         }
-        std::cout << " trylock  success ----->  " << std::endl;
+        // std::cout << " trylock  success ----->  " << std::endl;
     }
     pthread_spinlock_t getId()
     {
@@ -88,13 +88,13 @@ public:
         if ( pthread_rwlock_init(&mid,NULL) != 0 ){
             throw std::exception();
         }
-        std::cout << " pthread_rwlock_init  ------------- " << std::endl;
+        // std::cout << " pthread_rwlock_init  ------------- " << std::endl;
     }
     virtual ~RWLock(){
         if ( pthread_rwlock_destroy(&mid) != 0 ){
             throw std::exception();
         }
-        std::cout << " pthread_rwlock_destroy  ------------- " << std::endl;
+        // std::cout << " pthread_rwlock_destroy  ------------- " << std::endl;
     }
     //默认加写锁
     void lock(){
@@ -102,23 +102,23 @@ public:
     }
     void readLock(){
         pthread_rwlock_rdlock(&mid);
-        std::cout << " pthread_rwlock_rdlock  ------------- " << std::endl;
+        // std::cout << " pthread_rwlock_rdlock  ------------- " << std::endl;
     }
     void writeLock(){
         pthread_rwlock_wrlock(&mid);
-        std::cout << " pthread_rwlock_wrlock  ------------- " << std::endl;
+        // std::cout << " pthread_rwlock_wrlock  ------------- " << std::endl;
     }
 
     void unlock(){
         pthread_rwlock_unlock(&mid);
-        std::cout << " pthread_rwlock_unlock  ------------- " << std::endl;
+        // std::cout << " pthread_rwlock_unlock  ------------- " << std::endl;
     }
     void trylock(){
         if (pthread_rwlock_trywrlock(&mid) != 0){
-            std::cout << " trylock failed ----->  " << std::endl;
+            // std::cout << " trylock failed ----->  " << std::endl;
             return;
         }
-        std::cout << " trylock  success ----->  " << std::endl;
+        // std::cout << " trylock  success ----->  " << std::endl;
     }
 
     pthread_rwlock_t getId()
@@ -137,7 +137,7 @@ public:
     inline static T* getLock(){
         if (m_lock == NULL){
             m_lock = new T();
-            std::cout << " allocate lock ... " << std::endl;
+            // std::cout << " allocate lock ... " << std::endl;
         }
         return m_lock;
     }

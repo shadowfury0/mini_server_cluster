@@ -2,6 +2,7 @@
 #define __L_NET_EPOLL__
 
 #include "net_header.h"
+#include "net_buffer.h"
 
 class EpollMode{
 public:
@@ -18,7 +19,7 @@ public:
     }
 
     void init(){
-        init(1024,1024);
+        init(sizeof(Packet),sizeof(Packet) );
     }
     void init(int max_e_num,int buf_s){
         max_event_num = max_e_num;

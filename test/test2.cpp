@@ -1,16 +1,13 @@
 #include <iostream>
+#include <string.h>
 
-#include "net_buffer.h"
-
+using namespace std;
 int main(){
 
-    NetBuffer wr;
+    char* path = "wwqw";
 
-    wr.push("mybad");
-    char* my = wr.pop();
-
-    printf("%s\n",my);
-
-    free(my);
+    if ( !strncmp(path,"asd",3) ){
+        std::cout << "hello" << endl;
+    }
     return 0;
 }

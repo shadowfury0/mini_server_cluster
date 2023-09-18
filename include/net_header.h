@@ -11,11 +11,12 @@
 #include<stdio.h>
 #include<unistd.h>
 #include<errno.h>
-#include<string.h>
 #include<fcntl.h>
 #include<stdlib.h>
 #include <signal.h>
 
 #include <iostream>
+
+#include "net_string.h"
 
 #endif

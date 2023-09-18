@@ -23,12 +23,12 @@ public:
         }
     }
 
-    void init(int n,int startPort);
+    void init(const char* ip,int startPort,int n);
     void join();
 
 private:
     //地址暂时用本地
-    const char* ipaddr = "127.0.0.1";
+    const char* ipaddr;
     int startPort;
     int w_num;
     std::thread* server_count;
